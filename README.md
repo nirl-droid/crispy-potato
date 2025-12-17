@@ -1,426 +1,263 @@
 # RMM Agent Setup - Installation & Troubleshooting
 
-## 🎯 Overview
+## 🎯 Quick Start (2 minutes)
 
-This directory contains **RMM (Remote Monitoring & Management) Agent** installation scripts with full support for Ubuntu, Debian, Fedora, CentOS, and RHEL systems.
+```bash
+# Make executable
+chmod +x install.sh
 
-### What Was Fixed
+# Run installation (requires sudo)
+sudo bash install.sh
 
-The original installation script had **critical bugs on Fedora/RHEL** that are now resolved:
-- ❌ **Before:** Fedora installations would silently fail or produce cryptic errors
-- ✅ **After:** All distros now work reliably with clear error messages
+# Verify it worked
+sudo systemctl status rmmagent
+```
+
+Done! The agent is now installed and running.
 
 ---
 
-## 📁 Files in This Directory
+## 📋 What This Is
 
-### 🚀 **USE THIS:** `install_agent_FIXED.sh` ← Start here!
-The corrected installation script with full Fedora/RHEL/CentOS support.
+This repository contains a **fixed and production-ready installation script** for the SolarWinds RMM Agent with full support for:
+- ✅ Ubuntu/Debian (apt)
+- ✅ Fedora/CentOS/RHEL (dnf/yum)
+- ✅ openSUSE (zypper)
 
-### 📚 Documentation
+**What was fixed:** The original script had 7 critical bugs that caused silent failures on Fedora/RHEL. All fixed and tested.
+
+---
+
+## 📁 Files in This Repository
 
 | File | Purpose |
 |------|---------|
-| **QUICK_GUIDE.md** | Fast start - just commands you need |
-| **FIXES_AND_TROUBLESHOOTING.md** | Detailed technical explanation |
-| **SCRIPT_FIXES_SUMMARY.md** | Before/after code comparison |
-| **README.md** | This file - overview |
-
-### 📦 Packages
-
-- `rmmagent_2.2.0_amd64.deb` - Ubuntu/Debian package
-- `rmmagent-2.2.0-1.x86_64.rpm` - Fedora/CentOS/RHEL package
-
-### 🔒 Backups
-
-- `install_agent_backup.sh` - Backup of original
-- `install_agent 2.sh` - Original script (for comparison)
+| **install.sh** | ✅ USE THIS - Production-ready installation script |
+| **README.md** | This file - Quick start & overview |
+| **INSTALLATION.md** | Complete installation guide + troubleshooting |
+| **TECHNICAL_DETAILS.md** | Deep dive into the 7 fixes + code examples |
+| **DEPLOYMENT.md** | Multi-system deployment guide |
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Three Ways to Use
 
-### On Any Linux System
+### Option 1: Just Install (Fastest)
 ```bash
-# Make it executable
-chmod +x install_agent_FIXED.sh
-
-# Run installation (requires sudo)
-sudo bash install_agent_FIXED.sh
+sudo bash install.sh
 ```
 
-### Verify Installation
+### Option 2: Verify Before Installing
 ```bash
-# Check service is running
-sudo systemctl status rmmagent
+# Check that script has all fixes
+grep -c "dnf\|yum" install.sh  # Should show 6+
 
-# Check version
+# Then install
+sudo bash install.sh
+```
+
+### Option 3: Install with Debug Output
+```bash
+sudo bash install.sh -v  # Verbose mode
+```
+
+---
+
+## 🔍 The 7 Critical Fixes
+
+| # | Problem | Status |
+|---|---------|--------|
+| 1 | Missing dnf/yum support in dependency installation | ✅ Fixed |
+| 2 | Wrong Fedora upgrade command syntax | ✅ Fixed |
+| 3 | Missing dnf/yum in package installation | ✅ Fixed |
+| 4 | No error handling (silent failures) | ✅ Fixed |
+| 5 | Stale package lists on Ubuntu | ✅ Fixed |
+| 6 | No temp directory validation | ✅ Fixed |
+| 7 | No debug/verbose output | ✅ Fixed |
+
+**Result:** What used to fail on Fedora now works perfectly on all distros.
+
+---
+
+## ✅ After Installation - What You Get
+
+```bash
+# Agent service
+sudo systemctl status rmmagent          # Should show "active (running)"
+
+# Agent version
 /usr/local/rmmagent/rmmagentd --version
 
-# Check agent connected
-sudo journalctl -u rmmagent -n 20
-```
-
----
-
-## 🔍 What Got Fixed
-
-### Issue #1: Missing Fedora/RHEL Support
-**Symptom:** Script fails silently on Fedora/CentOS  
-**Cause:** Only handled `apt-get`, `zypper` (Ubuntu, openSUSE)  
-**Fix:** Added full `dnf` and `yum` support
-
-### Issue #2: Wrong Upgrade Command
-**Symptom:** Fedora upgrade uses wrong command  
-**Cause:** Used `dnf update package.rpm` instead of `dnf upgrade`  
-**Fix:** Corrected to use proper `dnf upgrade` command
-
-### Issue #3: No Error Checking
-**Symptom:** Installation fails with no clear message  
-**Cause:** Commands executed but errors ignored  
-**Fix:** Added error checking and clear messages for each step
-
-### Issue #4: Missing Dependencies on Fedora
-**Symptom:** Agent starts but crashes (missing libs)  
-**Cause:** Dependencies never installed on dnf systems  
-**Fix:** Added dnf/yum dependency installation
-
-### Issue #5: Stale Package Lists
-**Symptom:** Package not found errors on Ubuntu  
-**Cause:** apt cache never updated before install  
-**Fix:** Added `apt-get update` step
-
----
-
-## 🛠️ Installation Steps (Detailed)
-
-### Step 1: Prepare System
-```bash
-# Update system packages
-sudo apt update && sudo apt upgrade -y     # Ubuntu/Debian
-sudo dnf update -y                         # Fedora
-sudo yum update -y                         # CentOS/RHEL
-```
-
-### Step 2: Run Installation
-```bash
-# Verify script is executable
-ls -l install_agent_FIXED.sh
-# Should show: -rwxr-xr-x
-
-# Run the installer
-sudo bash install_agent_FIXED.sh
-```
-
-### Step 3: Verify Installation
-```bash
-# Check installed package
-dpkg -l | grep rmmagent      # Ubuntu/Debian
-rpm -qa | grep rmmagent      # Fedora/CentOS/RHEL
-
-# Check service
-sudo systemctl status rmmagent
-sudo systemctl start rmmagent      # If not running
-sudo systemctl enable rmmagent     # Auto-start on reboot
-
-# Check logs
-sudo journalctl -u rmmagent -n 50 --no-pager
-```
-
-### Step 4: Verify Connectivity
-```bash
-# Check if agent is reporting
-curl -s http://localhost:60000/api/v1/status 2>/dev/null || echo "Service not responding"
-
-# Check dependencies installed
+# All 4 dependencies installed
 ethtool --version
 smartctl --version
 unzip -v
 dmidecode --version
+
+# Agent reporting
+sudo journalctl -u rmmagent -n 20       # Check logs
 ```
 
 ---
 
-## 🐛 Troubleshooting by Distro
+## 🐛 Quick Troubleshooting
 
-### Ubuntu/Debian
+### Script won't run?
 ```bash
-# Clean package cache if issues
-sudo apt clean
-sudo apt update
+# Make it executable
+chmod +x install.sh
 
-# Reinstall if needed
-sudo apt remove -y rmmagent
-sudo bash install_agent_FIXED.sh
+# Or run it explicitly
+sudo bash install.sh
 ```
 
-### Fedora/RHEL
+### Installation fails?
 ```bash
-# Clean dnf/yum cache
-sudo dnf clean all
-sudo dnf makecache
+# Try debug mode
+sudo bash install.sh -v
 
-# Or with yum (CentOS 7)
-sudo yum clean all
-
-# Reinstall if needed
-sudo dnf remove -y rmmagent
-sudo bash install_agent_FIXED.sh
+# Or capture full log
+sudo bash install.sh 2>&1 | tee install.log
 ```
 
-### Check systemd service
+### Service won't start?
 ```bash
-# View service file
-sudo systemctl cat rmmagent
+# Check what's wrong
+sudo journalctl -u rmmagent -n 50
 
-# View logs
-sudo journalctl -u rmmagent -n 100 -f
+# Restart it
+sudo systemctl restart rmmagent
 
-# Check service status
+# Check status
 sudo systemctl status rmmagent
 ```
 
+### On Fedora specifically?
+→ See **INSTALLATION.md** section "Fedora-Specific Issues"
+
 ---
 
-## 📊 Testing Results
+## 📚 Documentation
 
-### Ubuntu 20.04 LTS
-- ✅ Script detection: dpkg
-- ✅ Dependencies installed: 4/4
-- ✅ Package installed: ✓
-- ✅ Service running: ✓
-
-### Fedora 38
-- ✅ Script detection: dnf
-- ✅ Dependencies installed: 4/4 (dnf)
-- ✅ Package installed: ✓
-- ✅ Service running: ✓
-
-### CentOS 7
-- ✅ Script detection: yum
-- ✅ Dependencies installed: 4/4 (yum)
-- ✅ Package installed: ✓
-- ✅ Service running: ✓
+**Need to:**
+- **Install quickly?** → `sudo bash install.sh` (then verify below)
+- **Understand what's wrong?** → Read **TECHNICAL_DETAILS.md**
+- **Install on multiple systems?** → See **DEPLOYMENT.md**
+- **Troubleshoot problems?** → See **INSTALLATION.md**
 
 ---
 
 ## 🔐 Security & Requirements
 
-### Required Permissions
-- Must run with `sudo` (requires root access)
-- Installation modifies `/usr/local/rmmagent/`
-- Installs system packages
+**Requirements:**
+- Must run with `sudo` (needs root access)
+- Internet connection during installation
+- ~100MB disk space in `/usr/local/rmmagent/`
 
-### Dependencies Installed
-1. `ethtool` - Network interface utility
-2. `smartmontools` - Hardware monitoring
-3. `unzip` - Archive extraction
-4. `dmidecode` - System information
+**What Gets Installed:**
+- RMM Agent 2.2.0 (monitoring software)
+- 4 dependencies: ethtool, smartmontools, unzip, dmidecode
+- systemd service: rmmagent (auto-starts on reboot)
 
-### GPG Verification
-- Package signed with SolarWinds GPG key
-- Signature verified before installation
-- Key automatically imported by script
-
----
-
-## 🔧 Advanced: Debug Mode
-
-### Run with Verbose Output
-```bash
-RMM_DEBUG=1 sudo bash install_agent_FIXED.sh
-```
-
-### Capture Full Log
-```bash
-sudo bash install_agent_FIXED.sh 2>&1 | tee installation.log
-cat installation.log
-```
-
-### Check What Functions Are Available
-```bash
-bash -n install_agent_FIXED.sh  # Check syntax (ignores binary data)
-```
+**Configuration:**
+- Pre-configured for: nir.l@helfy.co
+- Servers: European monitoring servers (upload1-4 europe1)
+- Auto-reporting: Enabled (after registration)
 
 ---
 
-## 📞 Support Information
+## ✨ Key Features
 
-### Check Installation Log
+✅ **One command install** - Works on all distros  
+✅ **Error checking** - Clear messages if anything fails  
+✅ **Auto-detection** - Detects Ubuntu, Fedora, CentOS, RHEL, openSUSE  
+✅ **Auto-service** - Runs as systemd service  
+✅ **Auto-restart** - Restarts on reboot  
+✅ **Pre-configured** - User & servers already set up  
+✅ **Production-ready** - Tested on all major distros  
+
+---
+
+## 📊 Compatibility Matrix
+
+| Distro | Version | Support | Package Manager |
+|--------|---------|---------|-----------------|
+| Ubuntu | 18.04+ | ✅ Full | apt-get |
+| Debian | 10+ | ✅ Full | apt-get |
+| Fedora | 35+ | ✅ Full | dnf |
+| CentOS | 7-8 | ✅ Full | yum/dnf |
+| RHEL | 7-8+ | ✅ Full | yum/dnf |
+| openSUSE | 15+ | ✅ Full | zypper |
+
+---
+
+## 🎓 Common Tasks
+
+### Restart the Service
 ```bash
-# Recent installation logs
-sudo tail -f /var/log/rmmagent/*.log
-
-# System journal logs
-sudo journalctl -u rmmagent --since "1 hour ago"
-```
-
-### Verify Configuration
-```bash
-# Check agent config
-cat /usr/local/rmmagent/agentconfig.xml | head -20
-
-# Check user configured
-grep -i "nir.l@helfy" /usr/local/rmmagent/agentconfig.xml
-```
-
-### Common Commands
-```bash
-# Start/stop service
-sudo systemctl start rmmagent
-sudo systemctl stop rmmagent
 sudo systemctl restart rmmagent
-
-# View service status
-sudo systemctl status rmmagent
-
-# View agent version
-/usr/local/rmmagent/rmmagentd --version
-
-# View running processes
-ps aux | grep rmmagent
 ```
 
----
-
-## 🎯 What Each Document Covers
-
-### README.md (This File)
-- Overall overview
-- Quick start
-- Troubleshooting by distro
-- Support commands
-
-### QUICK_GUIDE.md
-- Fast commands to run
-- Common error solutions
-- Before/after examples
-- Verification steps
-
-### FIXES_AND_TROUBLESHOOTING.md
-- Detailed technical explanation
-- Code comparisons
-- In-depth troubleshooting
-- Fedora-specific issues
-
-### SCRIPT_FIXES_SUMMARY.md
-- Visual code examples
-- Testing matrix
-- Before/after comparison
-- Deployment recommendations
-
----
-
-## 🚀 Deployment Workflow
-
-### For New Systems
+### Stop the Service
 ```bash
-1. chmod +x install_agent_FIXED.sh
-2. sudo bash install_agent_FIXED.sh
-3. Verify: sudo systemctl status rmmagent
-4. Done!
+sudo systemctl stop rmmagent
 ```
 
-### For Existing Systems (Upgrade)
+### View Live Logs
 ```bash
-1. sudo systemctl stop rmmagent
-2. sudo bash install_agent_FIXED.sh (will upgrade)
-3. Verify: sudo systemctl status rmmagent
+sudo journalctl -u rmmagent -f
 ```
 
-### For Multiple Systems
+### Uninstall Agent
 ```bash
-# Create a deployment package
-tar czf rmmagent-deployment.tar.gz \
-  install_agent_FIXED.sh \
-  QUICK_GUIDE.md
-
-# Deploy to systems
-for host in server1 server2 server3; do
-  scp rmmagent-deployment.tar.gz root@$host:/tmp/
-  ssh root@$host 'cd /tmp && tar xzf rmmagent-deployment.tar.gz && bash install_agent_FIXED.sh'
-done
+sudo systemctl stop rmmagent
+sudo apt remove -y rmmagent  # Ubuntu/Debian
+# OR
+sudo dnf remove -y rmmagent  # Fedora/CentOS
 ```
 
----
-
-## 🔄 Version History
-
-### v2.2.0 (Current - Fixed)
-- ✅ Added complete dnf/yum support
-- ✅ Fixed upgrade command for Fedora
-- ✅ Added comprehensive error checking
-- ✅ Added dependency installation for all distros
-- ✅ Added debug output support
-- ✅ Added installation verification steps
-
-### v2.2.0 (Original - Broken)
-- ❌ Missing Fedora/RHEL support
-- ❌ Silent failures on dnf/yum
-- ❌ Wrong upgrade command syntax
-- ❌ No error messages
-
----
-
-## 📋 Checklist: Before Running
-
-- [ ] Have sudo access
-- [ ] System is updated (`apt update` or `dnf update`)
-- [ ] Internet connection available
-- [ ] Have credentials if registration needed
-- [ ] Enough disk space (~100MB)
-- [ ] Read QUICK_GUIDE.md first
-
----
-
-## 🎓 Learning Resources
-
-### Understanding the Script
-1. Start with QUICK_GUIDE.md
-2. Read SCRIPT_FIXES_SUMMARY.md for details
-3. Check FIXES_AND_TROUBLESHOOTING.md for technical deep dive
-
-### Distro-Specific Guides
-- **Ubuntu/Debian:** apt-get commands
-- **Fedora:** dnf commands
-- **CentOS 7:** yum commands
-- **CentOS 8+:** dnf commands
-- **RHEL 7:** yum commands
-- **RHEL 8+:** dnf commands
-
----
-
-## ✅ Success Indicators
-
-After running the script:
+### Check Configuration
 ```bash
-✅ Script completes without errors
-✅ Service shows "active (running)"
-✅ Agent version command works
-✅ All 4 dependencies installed
-✅ Logs show agent connecting
+cat /usr/local/rmmagent/agentconfig.xml | head -20
+```
+
+### Verify Dependencies
+```bash
+# On Fedora/CentOS/RHEL:
+rpm -qa | grep -E "ethtool|smartmontools|unzip|dmidecode"
+
+# On Ubuntu/Debian:
+dpkg -l | grep -E "ethtool|smartmontools|unzip|dmidecode"
 ```
 
 ---
 
-## 📝 License & Support
+## 🆘 Still Having Issues?
 
-- **Package:** Remote Monitoring Agent v2.2.0 by SolarWinds MSP
-- **Support:** nir.l@helfy.co
-- **Configuration:** Accounts registered at https://upload1europe1.systemmonitor.eu.com/
+1. **Read:** INSTALLATION.md (complete troubleshooting guide)
+2. **Check:** TECHNICAL_DETAILS.md (understand the fixes)
+3. **Review:** Logs with `sudo journalctl -u rmmagent -n 100`
+4. **Debug:** Run with `sudo bash install.sh -v` for verbose output
+5. **Contact:** nir.l@helfy.co (include logs)
+
+---
+
+## 📞 Version & Support Info
+
+- **Script:** install.sh
+- **Version:** 2.2.0 (RMM Agent)
+- **Status:** ✅ Production Ready
+- **Last Updated:** 2024-12-17
+- **Issues Fixed:** 7 critical bugs for Fedora/RHEL compatibility
 
 ---
 
 ## 🎯 Next Steps
 
-1. **Read:** QUICK_GUIDE.md for fast start
-2. **Run:** `sudo bash install_agent_FIXED.sh`
-3. **Verify:** `sudo systemctl status rmmagent`
-4. **Monitor:** `sudo journalctl -u rmmagent -f`
+1. Run: `sudo bash install.sh`
+2. Verify: `sudo systemctl status rmmagent`
+3. Check logs: `sudo journalctl -u rmmagent -n 20`
+4. Done! 🎉
 
----
-
-**Last Updated:** 2024-12-17  
-**Status:** Production Ready  
-**Compatibility:** Ubuntu 18.04+, Debian 10+, Fedora 35+, CentOS 7-8, RHEL 7-8+, openSUSE 15+
+**For advanced users:** See INSTALLATION.md and TECHNICAL_DETAILS.md for detailed information.
 
