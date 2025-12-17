@@ -260,4 +260,3 @@ dpkg -l | grep -E "ethtool|smartmontools|unzip|dmidecode"
 4. Done! 🎉
 
 **For advanced users:** See INSTALLATION.md and TECHNICAL_DETAILS.md for detailed information.
-
